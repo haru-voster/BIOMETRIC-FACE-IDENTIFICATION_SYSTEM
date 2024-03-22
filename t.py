@@ -9,6 +9,8 @@ import pandas as pd
 import datetime
 from tkinter import messagebox
 import time
+import subprocess
+import mysql.connector
 
 # Window is our Main frame of system
 window = tk.Tk()
@@ -24,11 +26,11 @@ def manually_fill():
     global sb
     sb = tk.Tk()
     # sb.iconbitmap('AMS.ico')
-    sb.title("Enter subject name...")
+    sb.title("Enter Course name...")
     sb.geometry('580x320')
     sb.configure(background='grey80')
 
-    def err_screen_for_subject():
+    def err_screen_for_Course():
 
         def ec_delete():
             ec.destroy()
@@ -38,12 +40,12 @@ def manually_fill():
         # ec.iconbitmap('AMS.ico')
         ec.title('Warning!!')
         ec.configure(background='snow')
-        Label(ec, text='Please enter your subject name!!!', fg='red',
+        Label(ec, text='Please enter your Course name!!!', fg='red',
               bg='white', font=('times', 16, ' bold ')).pack()
         Button(ec, text='OK', command=ec_delete, fg="black", bg="lawn green", width=9, height=1, activebackground="Red",
                font=('times', 15, ' bold ')).place(x=90, y=50)
 
-def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
+def FF_DATABASE(ID, ENROLLMENT, NAME, COURSE, DATE, TIME):
     ts = time.time()
     Date = datetime.datetime.fromtimestamp(ts).strftime('%Y_%m_%d')
     timeStamp = datetime.datetime.fromtimestamp(ts).strftime('%H:%M:%S')
@@ -62,7 +64,7 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
     # Check if attendance already exists for the given student
     try:
         query = "SELECT * FROM attendance WHERE ENROLLMENT = %s AND DATE = %s"
-        cursor.execute(query, (ENROLLMENT, DATE))
+        cursor.execute(query, (ENROLLMENT, NAME, COURSE, DATE))
         existing_attendance = cursor.fetchone()
         if existing_attendance:
             messagebox.showwarning('Warning', 'Attendance already recorded for this student on this date.')
@@ -73,8 +75,8 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
 
     # Insert attendance data into the database
     try:
-        query = "INSERT INTO attendance (ID, ENROLLMENT, NAME, DATE, TIME) VALUES (NULL, %s, %s, %s, %s)"
-        values = (ENROLLMENT, NAME, DATE, TIME)
+        query = "INSERT INTO attendance (ID, ENROLLMENT, NAME, COURSE, DATE, TIME) VALUES (NULL, %s, %s, %s, %s, %s)"
+        values = (ID, ENROLLMENT, NAME, COURSE, DATE, TIME)
         cursor.execute(query, values)
         connection.commit()
         messagebox.showinfo("Success", "Student attendance recorded successfully")
@@ -86,7 +88,7 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
         connection.close()
         
         if subb == '':
-            err_screen_for_subject()
+            err_screen_for_Course()
         else:
             sb.destroy()
             MFW = tk.Tk()
@@ -105,7 +107,7 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
                 # errsc2.iconbitmap('AMS.ico')
                 errsc2.title('Warning!!')
                 errsc2.configure(background='grey80')
-                Label(errsc2, text='Please enter Student & Enrollment!!!', fg='black', bg='white',
+                Label(errsc2, text='Please enter Student & ADMISSION NUMBER!!!', fg='black', bg='white',
                       font=('times', 16, ' bold ')).pack()
                 Button(errsc2, text='OK', command=del_errsc2, fg="black", bg="lawn green", width=9, height=1,
                        activebackground="Red", font=('times', 15, ' bold ')).place(x=90, y=50)
@@ -116,13 +118,18 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
                         return False
                 return True
 
-            ENR = tk.Label(MFW, text="Enter Enrollment", width=15, height=2, fg="black", bg="grey",
+            ENR = tk.Label(MFW, text="ADMISSION NO.:", width=15, height=2, fg="black", bg="grey",
                            font=('times', 15))
             ENR.place(x=30, y=100)
 
-            STU_NAME = tk.Label(MFW, text="Enter Student name", width=15, height=2, fg="black", bg="grey",
+            STU_NAME = tk.Label(MFW, text="STUDENT NAME:", width=15, height=2, fg="black", bg="grey",
                                 font=('times', 15))
             STU_NAME.place(x=30, y=200)
+            
+            STU_NAME = tk.Label(MFW, text="COURSE NAME:", width=15, height=2, fg="black", bg="grey",
+                                font=('times', 15))
+            STU_NAME.place(x=30, y=200)
+            
 
             global ENR_ENTRY
             ENR_ENTRY = tk.Entry(MFW, width=20, validate='key',
@@ -154,7 +161,7 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
                         ts).strftime('%H:%M:%S')
                     Hour, Minute, Second = time.split(":")
                     Insert_data = "INSERT INTO " + attendance + \
-                        " (ID,ENROLLMENT,NAME,DATE,TIME) VALUES (0, %s, %s, %s,%s)"
+                        " (ID, ENROLLMENT, NAME, COURSE, DATE,TIME) VALUES (0, %s, %s, %s, %s, %s)"
                     VALUES = (str(ENROLLMENT), str(
                         STUDENT), str(Date), str(time))
                     try:
@@ -167,7 +174,7 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
             def create_csv():
                 import csv
                 cursor.execute("select * from " + attendance + ";")
-                csv_name = 'C:/Users/harou/OneDrive/Desktop/recognizer/Attendance/Manually Attendance/'+attendance+'.csv'
+                csv_name = r'C:\Users\harou\OneDrive\Desktop\D\attendance' + attendance + '.csv'
                 with open(csv_name, "w") as csv_file:
                     csv_writer = csv.writer(csv_file)
                     csv_writer.writerow(
@@ -223,7 +230,7 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
             def attf():
                 import subprocess
                 subprocess.Popen(
-                    r'explorer /select,"C:/Users/harou/OneDrive/Desktop/recognizer/Attendance/Manually Attendance/-------Check atttendance-------"')
+                    r'explorer /select,"C:\Users\harou\OneDrive\Desktop\D\Attendance\Manually Attendance\-------Check atttendance-------"')
 
             attf = tk.Button(MFW,  text="Check Sheets", command=attf, fg="white", bg="black",
                              width=12, height=1, activebackground="white", font=('times', 14, ' bold '))
@@ -231,7 +238,7 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, DATE, TIME):
 
             MFW.mainloop()
 
-    SUB = tk.Label(sb, text="Enter Subject : ", width=15, height=2,
+    SUB = tk.Label(sb, text="ENTER COURSE : ", width=15, height=2,
                    fg="black", bg="grey80", font=('times', 15, ' bold '))
     SUB.place(x=30, y=100)
 
@@ -255,6 +262,10 @@ def clear():
 
 def clear1():
     txt2.delete(first=0, last=22)
+    
+def clear2():
+    txt3.delete(first=0, last=22)
+
 
 
 def del_sc1():
@@ -268,7 +279,7 @@ def err_screen():
     # sc1.iconbitmap('AMS.ico')
     sc1.title('Warning!!')
     sc1.configure(background='grey80')
-    Label(sc1, text='Enrollment & Name required!!!', fg='black',
+    Label(sc1, text='ADMISSION NUMBER & NAME REQUIRED!!!', fg='black',
           bg='white', font=('times', 16)).pack()
     Button(sc1, text='OK', command=del_sc1, fg="black", bg="lawn green", width=9,
            height=1, activebackground="Red", font=('times', 15, ' bold ')).place(x=90, y=50)
@@ -287,7 +298,7 @@ def err_screen1():
     # sc2.iconbitmap('AMS.ico')
     sc2.title('Warning!!')
     sc2.configure(background='grey80')
-    Label(sc2, text='Please enter your subject name!!!', fg='black',
+    Label(sc2, text='Please enter your course name!!!', fg='black',
           bg='white', font=('times', 16)).pack()
     Button(sc2, text='OK', command=del_sc2, fg="black", bg="lawn green", width=9,
            height=1, activebackground="Red", font=('times', 15, ' bold ')).place(x=90, y=50)
@@ -321,14 +332,14 @@ def take_img():
                     # saving the captured face in the dataset folder
                     cv2.imwrite("TrainingImage/ " + Name + "." + Enrollment + '.' + str(sampleNum) + ".jpg",
                                 gray)
-                    print("Images Saved for Enrollment :")
+                    print("Images Saved for ADMISSION NUMBER :")
                     cv2.imshow('Frame', img)
                 # wait for 100 miliseconds
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
                 #
-                # # break if the sample number is morethan 100
-                elif sampleNum >10:
+                # # break if the sample number is morethan 0
+                elif sampleNum >0:
                     break
 
 
@@ -342,7 +353,7 @@ def take_img():
                 writer = csv.writer(csvFile, delimiter=',')
                 writer.writerow(row)
                 csvFile.close()
-            res = "Images Saved for Enrollment : " + Enrollment + " Name : " + Name
+            res = "Images Saved for ADMISSION NUMBER : " + Enrollment + " Name : " + Name
             Notification.configure(
                 text=res, bg="SpringGreen3", width=50, font=('times', 18, 'bold'))
             Notification.place(x=250, y=400)
@@ -352,12 +363,12 @@ def take_img():
             Notification.place(x=450, y=400)
 
 
-# for choose subject and fill attendance
-def subjectchoose():
+# for choose Course and fill attendance
+def coursechoose():
     def Fillattendances():
         sub = tx.get()
         now = time.time()  # For calculate seconds of video
-        future = now + 20
+        future = now + 5 #no of seconds counted
         if time.time() < future:
             if sub == '':
                 err_screen1()
@@ -376,7 +387,7 @@ def subjectchoose():
                 df = pd.read_csv("StudentDetails\StudentDetails.csv")
                 cam = cv2.VideoCapture(0)
                 font = cv2.FONT_HERSHEY_SIMPLEX
-                col_names = ['Enrollment', 'Name', 'Date', 'Time']
+                col_names = ['Enrollment', 'Name', 'Course', 'Date', 'Time']
                 attendance = pd.DataFrame(columns=col_names)
                 while True:
                     ret, im = cam.read()
@@ -388,11 +399,12 @@ def subjectchoose():
                         Id, conf = recognizer.predict(gray[y:y + h, x:x + w])
                         if (conf < 70):
                             print(conf)
-                            global Subject
+                            global Course
                             global aa
+                            global cr
                             global date
                             global timeStamp
-                            Subject = tx.get()
+                            Course = tx.get()
                             ts = time.time()
                             date = datetime.datetime.fromtimestamp(
                                 ts).strftime('%Y-%m-%d')
@@ -403,7 +415,7 @@ def subjectchoose():
                             tt = str(Id) + "-" + aa
                             En = '15624031' + str(Id)
                             attendance.loc[len(attendance)] = [
-                                Id, aa, date, timeStamp]
+                                Id, aa, Course, date, timeStamp]
                             cv2.rectangle(
                                 im, (x, y), (x + w, y + h), (0, 260, 0), 7)
                             cv2.putText(im, str(tt), (x + h, y),
@@ -431,7 +443,7 @@ def subjectchoose():
                 timeStamp = datetime.datetime.fromtimestamp(
                     ts).strftime('%H:%M:%S')
                 Hour, Minute, Second = timeStamp.split(":")
-                fileName = "Attendance/" + Subject + "_" + date + \
+                fileName = "Attendance/" + Course + "_" + date + \
                     "_" + Hour + "-" + Minute + "-" + Second + ".csv"
                 attendance = attendance.drop_duplicates(
                     ['Enrollment'], keep='first')
@@ -442,33 +454,32 @@ def subjectchoose():
                 date_for_DB = datetime.datetime.fromtimestamp(
                     ts).strftime('%Y_%m_%d')
                 attendance = str(
-                    Subject + "_" + date_for_DB + "_Time_" + Hour + "_" + Minute + "_" + Second)
-                import mysql.Connector
+                    Course + "_" + date_for_DB + "_Time_" + Hour + "_" + Minute + "_" + Second)
 
                 # Connect to the database
                 try:
                     global cursor
                     connection = mysql.connect(
-                        host='localhost', user='root', password='@voster', database='attendance')
+                        host='localhost', user='root', password='@voster', database='ff_database')
                     cursor = connection.cursor()
                 except Exception as e:
                     print(e)
 
-                sql = "CREATE TABLE " + attendance + """
-                (ID INT NOT NULL AUTO_INCREMENT,
-                 ENROLLMENT varchar(100) NOT NULL,
+                mysql = "CREATE TABLE " + attendance + """
+                (ENROLLMENT varchar(100) NOT NULL,
                  NAME VARCHAR(50) NOT NULL,
+                 COURSE VARCHAR(100) NOT NULL,
                  DATE VARCHAR(20) NOT NULL,
                  TIME VARCHAR(20) NOT NULL,
-                     PRIMARY KEY (ID)
+                     PRIMARY KEY (ENROLLMENT)
                      );
                 """
                 # Now enter attendance in Database
                 insert_data = "INSERT INTO " + attendance + \
-                    " (ID,ENROLLMENT,NAME,DATE,TIME) VALUES (0, %s, %s, %s,%s)"
-                VALUES = (str(Id), str(aa), str(date), str(timeStamp))
+                    " (ID, ENROLLMENT, NAME, COURSE, DATE, TIME) VALUES (0, %s, %s, %s, %s, %s)"
+                VALUES = (str(Id), str(aa), str(Course), str(date), str(timeStamp))
                 try:
-                    cursor.execute(sql)  # for create a table
+                    cursor.execute(mysql)  # for create a table
                     # For insert data into table
                     cursor.execute(insert_data, VALUES)
                 except Exception as ex:
@@ -485,9 +496,9 @@ def subjectchoose():
                 import csv
                 import tkinter
                 root = tkinter.Tk()
-                root.title("Attendance of " + Subject)
+                root.title("Attendance of " + Course)
                 root.configure(background='grey80')
-                cs = 'C:/Users/harou/OneDrive/Desktop/recognizer/' + fileName
+                cs = r'C:\Users\harou\OneDrive\Desktop\D\attendance.csv' + fileName #added desktop path
                 with open(cs, newline="") as file:
                     reader = csv.reader(file)
                     r = 0
@@ -502,12 +513,12 @@ def subjectchoose():
                             c += 1
                         r += 1
                 root.mainloop()
-                print(attendance)
+                
 
-    # windo is frame for subject chooser
+    # windo is frame for Course chooser
     windo = tk.Tk()
     # windo.iconbitmap('AMS.ico')
-    windo.title("Enter subject name...")
+    windo.title("Enter Course name...")
     windo.geometry('580x320')
     windo.configure(background='grey80')
     Notifica = tk.Label(windo, text="Attendance filled Successfully", bg="Green", fg="white", width=33,
@@ -515,14 +526,14 @@ def subjectchoose():
 
     def Attf():
         import subprocess
-        subprocess.Popen(
-            r'explorer \select,"C:\Users\harou\OneDrive\Desktop\recognizer\Attendance-------Check atttendance-------"')
+        folder_path = r'C:\Users\harou\OneDrive\Desktop\D\Attendance\Manually Attendance'
+        subprocess.Popen(['explorer', '/select,', folder_path])
 
     attf = tk.Button(windo,  text="Check Sheets", command=Attf, fg="white", bg="black",
                      width=12, height=1, activebackground="white", font=('times', 14, ' bold '))
     attf.place(x=430, y=255)
 
-    sub = tk.Label(windo, text="Enter Subject : ", width=15, height=2,
+    sub = tk.Label(windo, text="Enter Course : ", width=15, height=2,
                    fg="black", bg="grey", font=('times', 15, ' bold '))
     sub.place(x=30, y=100)
 
@@ -556,7 +567,7 @@ def admin_panel():
                 root.title("Student Details")
                 root.configure(background='grey80')
 
-                cs = 'C:/Users/harou/OneDrive/Desktop/recognizer/StudentDetails/StudentDetails.csv'
+                cs = r'C:\Users\harou\OneDrive\Desktop\D\StudentDetails\StudentDetails.csv'
                 with open(cs, newline="") as file:
                     reader = csv.reader(file)
                     r = 0
@@ -630,15 +641,15 @@ def trainimg():
     global detector
     detector = cv2.CascadeClassifier("haarcascade_frontalface_default.xml")
     try:
-        global faces, Id
-        faces, Id = getImagesAndLabels("TrainingImage")
+        global faces, Enrollment
+        faces, Enrollment = getImagesAndLabels("TrainingImage")
     except Exception as e:
         l = 'please make "TrainingImage" folder & put Images'
         Notification.configure(text=l, bg="SpringGreen3",
                                width=50, font=('times', 18, 'bold'))
         Notification.place(x=350, y=400)
 
-    recognizer.train(faces, np.array(Id))
+    recognizer.train(faces, np.array(Enrollment))
     try:
         recognizer.save("TrainingImageLabel\Trainner.yml")
     except Exception as e:
@@ -658,7 +669,7 @@ def getImagesAndLabels(path):
     # create empth face list
     faceSamples = []
     # create empty ID list
-    Ids = []
+    Enrollments = []
     # now looping through all the image paths and loading the Ids and the images
     for imagePath in imagePaths:
         # loading the image and converting it to gray scale
@@ -667,14 +678,14 @@ def getImagesAndLabels(path):
         imageNp = np.array(pilImage, 'uint8') 
         # getting the Id from the image
 
-        Id = int(os.path.split(imagePath)[-1].split(".")[1])
+        Enrollment = int(os.path.split(imagePath)[-1].split(".")[1])
         # extract the face from the training image sample
         faces = detector.detectMultiScale(imageNp)
         # If a face is there then append that in the list as well as Id of it
         for (x, y, w, h) in faces:
             faceSamples.append(imageNp[y:y + h, x:x + w])
-            Ids.append(Id)
-    return faceSamples, Ids
+            Enrollments.append(Enrollment)
+    return faceSamples, Enrollments
 
 
 window.grid_rowconfigure(0, weight=1)
@@ -697,8 +708,8 @@ message.place(x=80, y=20)
 
 Notification = tk.Label(window, text="All things good", bg="Green", fg="white", width=15,
                         height=3, font=('times', 17))
-
-lbl = tk.Label(window, text="Enter Enrollment : ", width=20, height=2,
+#admission label
+lbl = tk.Label(window, text="ADMISSION NO. : ", width=20, height=2,
                fg="black", bg="grey", font=('times', 15, 'bold'))
 lbl.place(x=200, y=200)
 
@@ -712,28 +723,40 @@ def testVal(inStr, acttyp):
 
 txt = tk.Entry(window, validate="key", width=20, bg="white",
                fg="black", font=('times', 25))
-txt['validatecommand'] = (txt.register(testVal), '%P', '%d')
+txt['validatecommand'] = (txt.register(testVal), '%S', '%d')
 txt.place(x=550, y=210)
-
-lbl2 = tk.Label(window, text="Enter Name : ", width=20, fg="black",
+#name label
+lbl2 = tk.Label(window, text="FULL NAME : ", width=20, fg="black",
                 bg="grey", height=2, font=('times', 15, ' bold '))
 lbl2.place(x=200, y=300)
 
 txt2 = tk.Entry(window, width=20, bg="white",
                 fg="black", font=('times', 25))
 txt2.place(x=550, y=310)
+#course label
+lbl3 = tk.Label(window, text="COURSE : ", width=20, fg="black",
+                bg="grey", height=2, font=('times', 15, ' bold '))
+lbl3.place(x=200, y=400)
 
+txt3 = tk.Entry(window, width=20, bg="white",
+                fg="black", font=('times', 25))
+txt3.place(x=550, y=410)
+#admission clearance button
 clearButton = tk.Button(window, text="Clear", command=clear, fg="white", bg="black",
                         width=10, height=1, activebackground="white", font=('times', 15, ' bold '))
 clearButton.place(x=950, y=210)
-
+#name  clearance button
 clearButton1 = tk.Button(window, text="Clear", command=clear1, fg="white", bg="black",
                          width=10, height=1, activebackground="white", font=('times', 15, ' bold '))
 clearButton1.place(x=950, y=310)
+#course clearance button
+clearButton2 = tk.Button(window, text="Clear", command=clear2, fg="white", bg="black",
+                         width=10, height=1, activebackground="white", font=('times', 15, ' bold '))
+clearButton2.place(x=950, y=410)
 
-AP = tk.Button(window, text="Check Registered students", command=admin_panel, fg="black",
-               bg="SkyBlue1", width=19, height=1, activebackground="white", font=('times', 15, ' bold '))
-AP.place(x=990, y=410)
+AP = tk.Button(window, text="ADMIN", command=admin_panel, fg="black",
+               bg="SkyBlue1", width=10, height=1, activebackground="white", font=('times', 15, ' bold '))
+AP.place(x=1120, y=410)
 
 takeImg = tk.Button(window, text="Take Images", command=take_img, fg="black", bg="SkyBlue1",
                     width=20, height=3, activebackground="white", font=('times', 15, ' bold '))
@@ -743,7 +766,7 @@ trainImg = tk.Button(window, text="Train Images", fg="black", command=trainimg, 
                      width=20, height=3, activebackground="white", font=('times', 15, ' bold '))
 trainImg.place(x=390, y=500)
 
-FA = tk.Button(window, text="Automatic Attendance", fg="black", command=subjectchoose,
+FA = tk.Button(window, text="Automatic Attendance", fg="black", command=coursechoose,
                bg="SkyBlue1", width=20, height=3, activebackground="white", font=('times', 15, ' bold '))
 FA.place(x=690, y=500)
 

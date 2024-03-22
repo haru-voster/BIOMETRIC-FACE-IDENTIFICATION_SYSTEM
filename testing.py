@@ -4,38 +4,16 @@ import cv2
 import numpy as np
 import mysql.connector
 import time
+from PIL import Image, ImageTk
 
 # Window is our Main frame of the system
 window = tk.Tk()
 window.title("FAMS - Face Recognition Based Attendance Management System")
 window.geometry('1280x720')
 window.configure(background='grey80')
-def get_selected_date():
-        selected_date = cal.get_date()
-        print("Selected Date:", selected_date)
-from tkcalendar import Calendar
-
-def display_calendar():
-            top = tk.Toplevel(root)
-
-            cal = Calendar(top, selectmode="day", date_pattern="yy/mm/dd")
-            cal.pack(fill="both", expand=True)
-
-            select_button = tk.Button(top, text="Select Date", command=get_selected_date)
-            select_button.pack()
-
-root = tk.Tk()
-root.title("Date Picker")
-
-cal = Calendar(root, selectmode="none", date_pattern="yy/mm/dd")
-cal.pack()
-
-select_button = tk.Button(root, text="Select Date", command=display_calendar)
-select_button.pack()
-
 
 # Function to store information and images in the database
-def voster(student_adm, student_firstname, student_lastname, date_joined, year, Drawing):
+def voster(student_adm, student_firstname, student_lastname, date_joined, year, image):
     # Connect to the database
     try:
         connection = mysql.connector.connect(
@@ -46,8 +24,8 @@ def voster(student_adm, student_firstname, student_lastname, date_joined, year, 
         return
     # Inserting data into the database
     try:
-        query = "INSERT INTO students (STUDENT_ADM, STUDENT_FIRSTNAME, STUDENT_LASTNAME, DATE_JOINED, YEAR, DRAWING) VALUES (%s, %s, %s, %s, %s, %s)"
-        values = (student_adm, student_firstname, student_lastname, date_joined, year, Drawing)
+        query = "INSERT INTO students (STUDENT_ADM, STUDENT_FIRSTNAME, STUDENT_LASTNAME, DATE_JOINED, YEAR, IMAGE) VALUES (%s, %s, %s, %s, %s, %s)"
+        values = (student_adm, student_firstname, student_lastname, date_joined, year, image)
         cursor.execute(query, values)
         connection.commit()
         messagebox.showinfo("Success", "Student information saved successfully")
@@ -98,101 +76,167 @@ def convert_image_to_drawing(img_path):
     return encoded_string.decode('utf-8')
 import base64#dfor images storage
 def take_img():
+    
+    
+    def clear_fields():
+        txt.delete(0, 'end')
+        txt2.delete(0,'end')
+        txt3.delete(0,'end')
+        txt4.delete(0, 'end')
+        txt5.delete(0,'end')
+        image_frame.delete(0,'end')  
+               
     # Function to save images and store information in the database
-    def capture_and_save_image():
+
+    # Create a new window for taking images
+    img_window = tk.Toplevel(window)
+    img_window.title("Take Images")
+    img_window.geometry('900x700')  # Adjusted window size
+    img_window.configure(background='grey80')
+
+    # Label and entry fields for student information
+    lbl = tk.Label(img_window, text="ADMISSION NUMBER:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
+    lbl.grid(row=0, column=0, padx=10, pady=5)
+    txt = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 15))
+    txt.grid(row=0, column=1, padx=10, pady=5)
+
+    lbl2 = tk.Label(img_window, text="FIRST NAME:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
+    lbl2.grid(row=1, column=0, padx=10, pady=5)
+    txt2 = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 15))
+    txt2.grid(row=1, column=1, padx=10, pady=5)
+
+    lbl3 = tk.Label(img_window, text="LAST NAME:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
+    lbl3.grid(row=2, column=0, padx=10, pady=5)
+    txt3 = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 15))
+    txt3.grid(row=2, column=1, padx=10, pady=5)
+
+    lbl4 = tk.Label(img_window, text="DATE JOINED:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
+    lbl4.grid(row=3, column=0, padx=10, pady=5)
+    txt4 = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 15))
+    txt4.grid(row=3, column=1, padx=10, pady=5)
+
+    lbl5 = tk.Label(img_window, text="YEAR OF STUDY:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
+    lbl5.grid(row=4, column=0, padx=10, pady=5)
+    txt5 = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 15))
+    txt5.grid(row=4, column=1, padx=10, pady=5)
+
+    # Frames for displaying captured image and fingerprint
+    image_frame = tk.LabelFrame(img_window, text="Captured Image", width=100, height=100)
+    image_frame.grid(row=5, column=0, padx=10, pady=10)
+
+    fingerprint_frame = tk.LabelFrame(img_window, text="Fingerprint", width=100, height=100)
+    fingerprint_frame.grid(row=5, column=1, padx=10, pady=10)
+     #capturing image button
+   
+    # Function to capture and display image
+    def capture_image():
+        try:
+            # Open camera
+            cam = cv2.VideoCapture(0)
+            ret, img = cam.read()
+            cam.release()
+
+            # Convert image to grayscale
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+            # Save the captured image
+            student_adm = txt.get()
+            if student_adm:
+                image = f"TrainingImage/{student_adm}.jpg"
+                cv2.imwrite(image, gray)
+            else:
+                messagebox.showerror("Error", "Please enter the Admission Number before capturing an image.")
+
+            # Resize the image to fit in the label frame
+            img = cv2.resize(gray, (100, 100))
+
+            # Display the captured image in the label frame
+            img = Image.fromarray(img)
+            img = ImageTk.PhotoImage(img)
+            label = tk.Label(image_frame, image=img)
+            label.image = img
+            label.pack()
+
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+
+    capture_button = tk.Button(img_window, text="Capture Image", command=capture_image, fg="black", bg="SkyBlue1", width=15, height=1, activebackground="white", font=('times', 12, 'bold'))
+    capture_button.grid(row=6, column=0, padx=10, pady=10)
+
+    # Function to capture fingerprint
+    def capture_fingerprint():
+        try:
+            # Open camera
+            cam = cv2.VideoCapture(0)
+            
+            while True:
+                ret, frame = cam.read()
+                if not ret:
+                    messagebox.showerror("Error", "Failed to capture fingerprint image.")
+                    break
+                
+                # Display the captured frame
+                cv2.imshow('Capture Fingerprint', frame)
+                
+                # Press 's' to save the image
+                key = cv2.waitKey(1)
+                if key == ord('s'):
+                    # Create directory if it doesn't exist
+                    if not os.path.exists("fingerprint_images"):
+                        os.makedirs("fingerprint_images")
+                    
+                    # Save the image
+                    cv2.imwrite("fingerprint_images/captured_fingerprint.jpg", frame)
+                    messagebox.showinfo("Success", "Fingerprint image saved successfully.")
+                    
+                    # Break the loop after saving the image
+                    break
+                
+                # Press 'q' to quit capturing
+                elif key == ord('q'):
+                    break
+            
+            # Release the camera
+            cam.release()
+            cv2.destroyAllWindows()
+
+        except Exception as e:
+            messagebox.showerror("Error", f"An error occurred: {e}")
+        
+
+
+    fingerprint_button = tk.Button(img_window, text="Capture Fingerprint", command=capture_fingerprint, fg="black", bg="SkyBlue1", width=20, height=1, activebackground="white", font=('times', 12, 'bold'))
+    fingerprint_button.grid(row=6, column=1, padx=10, pady=10)
+    # Function to save the student information
+    def save_student_info():
         student_adm = txt.get()
         student_firstname = txt2.get()
         student_lastname = txt3.get()
         date_joined = txt4.get()
         year = txt5.get()
 
-        if student_adm == '' or student_firstname == '' or student_lastname == '' or date_joined =='' or year =='':
+        if student_adm == '' or student_firstname == '' or student_lastname == '' or date_joined == '' or year == '':
             messagebox.showerror("Error", "Please fill all the fields")
             return
 
-        try:
-            # Open camera
-            cam = cv2.VideoCapture(0)
-            detector = cv2.CascadeClassifier('haarcascade_frontalface_default.xml')
-            sampleNum = 0
-            while True:
-                ret, img = cam.read()
-                gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                faces = detector.detectMultiScale(gray, 1.3, 5)
-                    # Incrementing sample number
-                for (x, y, w, h) in faces:
-                    cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-                    # Incrementing sample number
-                    sampleNum += 1
-                    # Saving the captured face in the dataset folder
-                    cv2.imwrite(f"TrainingImage/{student_adm}.{sampleNum}.jpg", gray[y:y + h, x:x + w])
+        image = f"TrainingImage/{student_adm}.jpg" if student_adm else None
 
-                if sampleNum > 1:
-                    break
-                # Read the saved image file as binary data
-           # Convert image to Base64 string
-            image_path = f"TrainingImage/{student_adm}.1.jpg"
-            drawing = convert_image_to_drawing(image_path)
-    # Connect to the database
-            connection = mysql.connector.connect(
-                host='localhost', user='root', password='@voster', database='voster')
-            cursor = connection.cursor()
+        # Save the student information to the database
+        voster(student_adm, student_firstname, student_lastname, date_joined, year, image)
 
-            # Inserting data into the database
-            query = "INSERT INTO students (STUDENT_ADM, STUDENT_FIRSTNAME, STUDENT_LASTNAME, DATE_JOINED, YEAR, DRAWING) VALUES (%s, %s, %s, %s, %s, %s)"
-            values = (student_adm, student_firstname, student_lastname, date_joined, year, drawing)
-            cursor.execute(query, values)
-            connection.commit()
-            messagebox.showinfo("Success", "Student information saved successfully")
-
-            cursor.close()
-            connection.close()
-
-            # Recognize face
-            recognize_face(student_adm, student_firstname, drawing)
-
-            cam.release()
-            cv2.destroyAllWindows()
-        except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {e}")
-
-# Buttons and other GUI elements 
-#this happens inside the registration of new student
-
-    # Create a new window for taking images
-    img_window = tk.Toplevel(window)
-    img_window.title("Take Images")
-    img_window.geometry('500x700')
-    img_window.configure(background='grey80')
+    # Button to save the student information
+    save_button = tk.Button(img_window, text="Save", command=save_student_info, fg="black", bg="skyblue", width=15, height=1, activebackground="white", font=('times', 12, 'bold'))
+    save_button.grid(row=7, columnspan=2, padx=10, pady=10)
+    
+    clear_button = tk.Button(img_window, text="Clear", command=clear_fields, fg="black", bg="red",
+                             width=10, height=1, activebackground="white", font=('times', 15, 'bold'))
+    clear_button.place(x=350, y=500)
 
 
-    lbl = tk.Label(img_window, text="ADMISSION NUMBER:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
-    lbl.place(x=50, y=50)
-    txt = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 25))
-    txt.place(x=290, y=60)
 
-    lbl2 = tk.Label(img_window, text="FIRST NAME:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
-    lbl2.place(x=50, y=150)
-    txt2 = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 25))
-    txt2.place(x=290, y=160)
-
-    lbl3 = tk.Label(img_window, text="LAST NAME:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
-    lbl3.place(x=50, y=250)
-    txt3 = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 25))
-    txt3.place(x=290, y=260)
-
-    lbl4 = tk.Label(img_window, text="DATE JOINED:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
-    lbl4.place(x=50, y=350)
-    txt4 = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 25))
-    txt4.place(x=290, y=360)
-
-    lbl5 = tk.Label(img_window, text="YEAR OF STUDY:", width=20, fg="black", bg="grey", height=2, font=('times', 15, 'bold'))
-    lbl5.place(x=50, y=450)
-    txt5 = tk.Entry(img_window, width=20, bg="white", fg="black", font=('times', 25))
-    txt5.place(x=290, y=460)
-
-    save_button = tk.Button(img_window, text="Save", command=capture_and_save_image, fg="black", bg="SkyBlue1", width=10, height=1, activebackground="white", font=('times', 15, 'bold'))
-    save_button.place(x=200, y=550)
+# Button to register new students
+takeImg = tk.Button(window, text="ADMIT STUDENTS", command=take_img, fg="black", bg="SkyBlue1", width=20, height=2, activebackground="green", font=('times', 15, 'bold'))
+takeImg.pack(pady=20)
 
 # Buttons and other GUI elements
 message = tk.Label(window, text="Students-Face-Recognition-Based-Attendance-Management-System", bg="black", fg="white", width=50, height=3, font=('times', 30, ' bold '))
@@ -213,14 +257,14 @@ def train_model():
     recognizer = cv2.face.LBPHFaceRecognizer_create()
 
     # Get the paths of all image files in the dataset
-    image_paths = [os.path.join(dataset_path, f) for f in os.listdir(dataset_path)]
+    images = [os.path.join(dataset_path, f) for f in os.listdir(dataset_path)]
 
     # Iterate through each image file
-    for image_path in image_paths:
+    for image in images:
         # Read the image in grayscale
-        img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread(image, cv2.IMREAD_GRAYSCALE)
         # Extract the label from the filename (format: student_adm.sampleNum.jpg)
-        label = int(os.path.split(image_path)[-1].split(".")[0])
+        label = int(os.path.split(image)[-1].split(".")[0])
 
         # Detect faces in the image
         faces_detected = face_detector.detectMultiScale(img)
@@ -291,8 +335,8 @@ def mark_attendance():
                 for (x, y, w, h) in faces:
                     cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
                     sampleNum += 1
-                    image_path = f"TrainingImage/{student_adm}.{sampleNum}.jpg"
-                    cv2.imwrite(image_path, gray[y:y + h, x:x + w])
+                    image = f"TrainingImage/{student_adm}.{sampleNum}.jpg"
+                    cv2.imwrite(image, gray[y:y + h, x:x + w])
                 
                 if sampleNum > 1:
                     break
@@ -316,8 +360,9 @@ def mark_attendance():
                 connection.close()
             cam.release()
 
+
     # Create a new window for marking attendance
-    att_window = tk.Toplevel(window) 
+    att_window = tk.Toplevel(window)
     att_window.title("Mark Attendance")
     att_window.geometry('500x400')
     att_window.configure(background='grey80')
@@ -434,7 +479,7 @@ def admin_check():
     Login.place(x=290, y=250)
     win.mainloop()
 
-message = tk.Label(window, text="STUDENTS FACE BASED ATTENDANCE SYSTEM", bg="black", fg="white", width=50,
+message = tk.Label(window, text="FACE_FINGERPRINT BIOMETRIC IDENTIFICATION SYSTEM", bg="black", fg="white", width=50,
                    height=4, font=('times', 30, ' bold '))
 
 message.place(x=80, y=20)
