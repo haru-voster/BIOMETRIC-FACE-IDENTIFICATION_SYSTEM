@@ -63,7 +63,7 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, COURSE, DATE, TIME):
 
     # Check if attendance already exists for the given student
     try:
-        query = "SELECT * FROM attendance WHERE ENROLLMENT = %s AND DATE = %s"
+        query = "SELECT * FROM student WHERE ENROLLMENT = %s AND DATE = %s"
         cursor.execute(query, (ENROLLMENT, NAME, COURSE, DATE))
         existing_attendance = cursor.fetchone()
         if existing_attendance:
@@ -161,9 +161,8 @@ def FF_DATABASE(ID, ENROLLMENT, NAME, COURSE, DATE, TIME):
                         ts).strftime('%H:%M:%S')
                     Hour, Minute, Second = time.split(":")
                     Insert_data = "INSERT INTO " + attendance + \
-                        " (ID, ENROLLMENT, NAME, COURSE, DATE,TIME) VALUES (0, %s, %s, %s, %s, %s)"
-                    VALUES = (str(ENROLLMENT), str(
-                        STUDENT), str(Date), str(time))
+                        " (ENROLLMENT, NAME, COURSE, DATE,TIME) VALUES (0, %s, %s, %s, %s, %s)"
+                    VALUES = (str(ENROLLMENT), str(NAME), str(Course), str(Date), str(time))
                     try:
                         cursor.execute(Insert_data, VALUES)
                     except Exception as e:
@@ -321,10 +320,11 @@ def take_img():
             Enrollment = txt.get()
             Name = txt2.get()
             sampleNum = 0
-            while (True):
+            
+            while (True):  # Capture images for 10 seconds
                 ret, img = cam.read()
                 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-                faces = detector.detectMultiScale(gray, 1.3, 5)
+                faces = detector.detectMultiScale(gray, 1.2, 5)
                 for (x, y, w, h) in faces:
                     cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
                     # incrementing sample number
@@ -332,14 +332,14 @@ def take_img():
                     # saving the captured face in the dataset folder
                     cv2.imwrite("TrainingImage/ " + Name + "." + Enrollment + '.' + str(sampleNum) + ".jpg",
                                 gray)
-                    print("Images Saved for ADMISSION NUMBER :")
+                    print("ADMISSION NUMBER :")
                     cv2.imshow('Frame', img)
-                # wait for 100 miliseconds
-                if cv2.waitKey(1) & 0xFF == ord('q'):
+                # wait for 2000 miliseconds
+                if cv2.waitKey(20) & 0xFF == ord('q'):
                     break
                 #
                 # # break if the sample number is morethan 0
-                elif sampleNum >0:
+                elif sampleNum >2:
                     break
 
 
@@ -353,7 +353,7 @@ def take_img():
                 writer = csv.writer(csvFile, delimiter=',')
                 writer.writerow(row)
                 csvFile.close()
-            res = "Images Saved for ADMISSION NUMBER : " + Enrollment + " Name : " + Name
+            res = " ADMISSION NUMBER : " + Enrollment + " Name : " + Name
             Notification.configure(
                 text=res, bg="SpringGreen3", width=50, font=('times', 18, 'bold'))
             Notification.place(x=250, y=400)
@@ -476,29 +476,36 @@ def coursechoose():
                 """
                 # Now enter attendance in Database
                 insert_data = "INSERT INTO " + attendance + \
-                    " (ID, ENROLLMENT, NAME, COURSE, DATE, TIME) VALUES (0, %s, %s, %s, %s, %s)"
-                VALUES = (str(Id), str(aa), str(Course), str(date), str(timeStamp))
+                    " ( ENROLLMENT, NAME, COURSE, DATE, TIME) VALUES (0, %s, %s, %s, %s, %s)"
+                VALUES = (str(aa), str(Course), str(date), str(timeStamp))
                 try:
-                    cursor.execute(mysql)  # for create a table
-                    # For insert data into table
-                    cursor.execute(insert_data, VALUES)
+                    M = 'ACCESS GRANTED'
+                    Notifica.configure(text=M, bg="Green", fg="white",
+                                    width=33, font=('times', 15, 'bold'))
+                    Notifica.place(x=20, y=250)
+
+                    # Function to remove the notification after 4 seconds
+                    def remove_label():
+                        Notifica.place_forget()
+
+                    # Schedule the label removal after 4000 milliseconds (4 seconds)
+                    root.after(4000, remove_label)
+                   
                 except Exception as ex:
                     print(ex)  #
 
-                M = 'Attendance filled Successfully'
+                M = 'ACCESS GRANTED'
                 Notifica.configure(text=M, bg="Green", fg="white",
                                    width=33, font=('times', 15, 'bold'))
                 Notifica.place(x=20, y=250)
-
                 cam.release()
                 cv2.destroyAllWindows()
 
                 import csv
                 import tkinter
                 root = tkinter.Tk()
-                root.title("Attendance of " + Course)
                 root.configure(background='grey80')
-                cs = r'C:\Users\harou\OneDrive\Desktop\D\attendance.csv' + fileName #added desktop path
+                cs = r'C:\Users\harou\OneDrive\Desktop\D\attendance.csv' + fileName + '.csv' #added desktop path
                 with open(cs, newline="") as file:
                     reader = csv.reader(file)
                     r = 0
@@ -515,14 +522,22 @@ def coursechoose():
                 root.mainloop()
                 
 
-    # windo is frame for Course chooser
+    # windo is frame for Course chooser                  n b
     windo = tk.Tk()
     # windo.iconbitmap('AMS.ico')
     windo.title("Enter Course name...")
-    windo.geometry('580x320')
+    windo.geometry('1280x720')
     windo.configure(background='grey80')
-    Notifica = tk.Label(windo, text="Attendance filled Successfully", bg="Green", fg="white", width=33,
-                        height=2, font=('times', 15, 'bold'))
+    def remove_notification():
+        Notifica.place_forget()
+
+    # Display the notification label
+    Notifica = tk.Label(windo, text="HELLO STUDENT, WELCOME BACK", bg="Green", fg="white", width=53,
+                        height=2, font=('times', 30, 'bold'))
+    Notifica.place(x=0, y=0)
+
+    # Schedule the removal of the notification after 3000 milliseconds (3 seconds)
+    
 
     def Attf():
         import subprocess
@@ -541,9 +556,10 @@ def coursechoose():
                   fg="black", font=('times', 23))
     tx.place(x=250, y=105)
 
-    fill_a = tk.Button(windo, text="Fill Attendance", fg="white", command=Fillattendances, bg="SkyBlue1", width=20, height=2,
+    fill_a = tk.Button(windo, text="AUTHENTICATE", fg="white", command=Fillattendances, bg="SkyBlue1", width=20, height=2,
                        activebackground="white", font=('times', 15, ' bold '))
     fill_a.place(x=250, y=160)
+    windo.after(5000, remove_notification)#3 SECONDS TO DISPLAY NOTIFICATION
     windo.mainloop()
 
 
@@ -594,7 +610,7 @@ def admin_panel():
                          width=38, font=('times', 19, 'bold'))
             Nt.place(x=120, y=350)
 
-    Nt = tk.Label(win, text="Attendance filled Successfully", bg="Green", fg="white", width=40,
+    Nt = tk.Label(win, text="ACCESS GRANTED", bg="Green", fg="white", width=40,
                   height=2, font=('times', 19, 'bold'))
     # Nt.place(x=120, y=350)
 
@@ -644,10 +660,11 @@ def trainimg():
         global faces, Enrollment
         faces, Enrollment = getImagesAndLabels("TrainingImage")
     except Exception as e:
-        l = 'please make "TrainingImage" folder & put Images'
+        #A TRAINED MODEL FOLDER CALLED has to be put
+        l = 'please make "TrainingImage" folder & put Images'#
         Notification.configure(text=l, bg="SpringGreen3",
-                               width=50, font=('times', 18, 'bold'))
-        Notification.place(x=350, y=400)
+                               width=40, font=('times', 18, 'bold'))
+        Notification.place(x=300, y=300)
 
     recognizer.train(faces, np.array(Enrollment))
     try:
@@ -655,13 +672,13 @@ def trainimg():
     except Exception as e:
         q = 'Please make "TrainingImageLabel" folder'
         Notification.configure(text=q, bg="SpringGreen3",
-                               width=50, font=('times', 18, 'bold'))
-        Notification.place(x=350, y=400)
+                               width=40, font=('times', 18, 'bold'))
+        Notification.place(x=300, y=450)
 
     res = "Model Trained"  # +",".join(str(f) for f in Id)
     Notification.configure(text=res, bg="olive drab",
-                           width=50, font=('times', 18, 'bold'))
-    Notification.place(x=250, y=400)
+                           width=50, font=('times', 15, 'bold'))
+    Notification.place(x=300, y=450)
 
 
 def getImagesAndLabels(path):
@@ -701,12 +718,12 @@ def on_closing():
 
 window.protocol("WM_DELETE_WINDOW", on_closing)
 
-message = tk.Label(window, text="Students-Face-Recognition-Based-Attendance-Management-System", bg="black", fg="white", width=50,
+message = tk.Label(window, text="STUDENT FACE BASED IDENTIFICATION SYSTEM", bg="black", fg="white", width=53,
                    height=3, font=('times', 30, ' bold '))
 
-message.place(x=80, y=20)
+message.place(x=00, y=00)
 
-Notification = tk.Label(window, text="All things good", bg="Green", fg="white", width=15,
+Notification = tk.Label(window, text="All things good", bg="Green", fg="white", width=20,
                         height=3, font=('times', 17))
 #admission label
 lbl = tk.Label(window, text="ADMISSION NO. : ", width=20, height=2,
