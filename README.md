@@ -39,7 +39,7 @@ Attendance Management System based on Face Recognition using Python  and OpenCv
 <img src="https://github.com/haru-voster/BIOMETRIC-FACE-IDENTIFICATION_SYSTEM/blob/main/autoattendance.png">
 
 ### Manually attendance filling UI
-<img src="https://github.com/Pragya9ps/Face-Recognition-Attendance-System/blob/main/AUTHENTICATE.png">
+<img src="https://github.com/haru-voster/BIOMETRIC-FACE-IDENTIFICATION_SYSTEM/blob/main/AUTHENTICATE.png">
 
 
 ### Video demo
