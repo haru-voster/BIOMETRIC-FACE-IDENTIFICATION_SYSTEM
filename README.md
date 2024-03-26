@@ -2,7 +2,7 @@
 Attendance Management System based on Face Recognition using Python  and OpenCv  
 
 ### Sourcerer
-<img src="https://avatars.githubusercontent.com/u/84435079?v=4" height="50px" width="50px" alt=""/>
+<img src="https://avatars.githubusercontent.com/u/98280456?v=4" height="50px" width="50px" alt=""/>
 
 ### Code Requirements
 - Opencv(`pip install opencv-python`)
@@ -30,16 +30,16 @@ Attendance Management System based on Face Recognition using Python  and OpenCv
 ### Screenshots
 
 ### Basic UI
-<img src="https://github.com/Pragya9ps/Face-Recognition-Attendance-System/blob/main/Screenshot%20(31).png">
+<img src="https://github.com/haru-voster/BIOMETRIC-FACE-IDENTIFICATION_SYSTEM/blob/main/GUI.png">
 
 ### When it Recognises me
-<img src="https://github.com/Pragya9ps/Face-Recognition-Attendance-System/blob/main/Screenshot%20(33).png">
+<img src="https://github.com/haru-voster/BIOMETRIC-FACE-IDENTIFICATION_SYSTEM/blob/main/face_reco.png">
 
 ### While filling automatic attendance
-<img src="https://github.com/Pragya9ps/Face-Recognition-Attendance-System/blob/main/Screenshot%20(38).png">
+<img src="https://github.com/haru-voster/BIOMETRIC-FACE-IDENTIFICATION_SYSTEM/blob/main/autoattendance.png">
 
 ### Manually attendance filling UI
-<img src="https://github.com/Pragya9ps/Face-Recognition-Attendance-System/blob/main/Screenshot%20(35).png">
+<img src="https://github.com/Pragya9ps/Face-Recognition-Attendance-System/blob/main/AUTHENTICATE.png">
 
 
 ### Video demo
