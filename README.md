@@ -42,9 +42,9 @@ Attendance Management System based on Face Recognition using Python  and OpenCv
 <img src="https://github.com/haru-voster/BIOMETRIC-FACE-IDENTIFICATION_SYSTEM/blob/main/AUTHENTICATE.png">
 
 
-### Video demo
+### Video demo BY HAROUNVOSTER
 
-[Youtube](https://youtu.be/onms2KDOTtY)
+[Youtube](https://youtu.be/aD_3pRYC4A8)
 
 
 ### Notes
